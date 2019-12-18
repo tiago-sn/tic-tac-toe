@@ -16,10 +16,14 @@ class Game extends Component {
   }
 
   handleClick(i) {
+    // update the history
+    // this is needed when the user go back in a past move
     const history = this.state.history.slice(0, this.state.stepNumber + 1);
-    const current = history[history.length - 1];
 
-    // copy the state.squares array
+    // select the current move
+    const current = history[this.state.stepNumber];
+
+    // copy the part of the state to be updated
     const squares = current.squares.slice();
 
     // check if there is a winner or if the clicked square has already been clicked
@@ -35,7 +39,6 @@ class Game extends Component {
       history: history.concat([{
         squares: squares
       }]),
-
       stepNumber: history.length,
       
       // change the next player
@@ -46,13 +49,14 @@ class Game extends Component {
   jumpTo(step) {
     this.setState({
       stepNumber: step,
+
       // se o número de jogadas (step) for par, xIsNext recebe true 
       xIsNext: (step % 2) === 0
     })
   }
 
   render() {
-    const history = this.state.history;
+    const { history } = this.state;
     const current = history[this.state.stepNumber];
     const winner = calculateWinner(current.squares);
 
