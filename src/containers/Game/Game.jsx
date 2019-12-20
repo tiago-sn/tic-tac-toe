@@ -8,57 +8,79 @@ class Game extends Component {
     super(props);
     this.state = {
       history: [{
-        squares: Array(9).fill(null)
+        boardState: Array(9).fill(null)
       }],
-      stepNumber: 0,
+      rounds: 0,
       xIsNext: true
     }
   }
 
   handleClick(i) {
-    // update the history
-    // this is needed when the user go back in a past move
-    const history = this.state.history.slice(0, this.state.stepNumber + 1);
+    const { history, rounds } = this.state;
 
-    // select the current move
-    const current = history[this.state.stepNumber];
+    // This is needed when the user go back in a past move.
+    const newHistory = this.updateHistory(history, rounds); 
+    const currentMove = newHistory[rounds];
 
     // copy the part of the state to be updated
-    const squares = current.squares.slice();
+    const boardState = currentMove.boardState.slice();
 
     // check if there is a winner or if the clicked square has already been clicked
-    if(calculateWinner(squares) || squares[i]) {
+    if(calculateWinner(boardState) || boardState[i]) {
       return;
     }
 
-    // check who is the next player and
-    // update the copy of the state which is going to be the next state
-    squares[i] = this.state.xIsNext ? 'X' : 'O';
-    
+    const newBoardState = this.updateBoardState(boardState, i);
+    this.makeMove(newHistory, newBoardState);
+  }
+
+  /**
+   * @param {array} newHistory 
+   * @param {object} boardState 
+   */
+  makeMove(history, newBoardState) {
     this.setState({
       history: history.concat([{
-        squares: squares
+        boardState: newBoardState
       }]),
-      stepNumber: history.length,
-      
-      // change the next player
+      rounds: history.length,
       xIsNext: !this.state.xIsNext
     })
   }
 
-  jumpTo(step) {
-    this.setState({
-      stepNumber: step,
+  /**
+   * Take a board state and a put the current player symbol in the board.
+   * @param {array} boardState 
+   * @param {number} square 
+   */
+  updateBoardState(boardState, square) {
+    boardState[square] = this.state.xIsNext ? 'X' : 'O';
+    return boardState;
+  }
 
-      // se o número de jogadas (step) for par, xIsNext recebe true 
-      xIsNext: (step % 2) === 0
+  /**
+   * This function takes a history array, a step number and returns a new history array with the
+   * current state, i.e. the last element of the array, in sync with that given step number.
+   * This is needed when the user "go back in time" by clicking in the list of the last steps.
+   * @param {Array} history
+   * @param {number} rounds 
+   */
+  updateHistory(history, rounds) {
+    return history.slice(0, rounds + 1);
+  }
+
+  jumpTo(round) {
+    this.setState({
+      rounds: round,
+      // se o número de jogadas (round) for par, xIsNext recebe true 
+      xIsNext: (round % 2) === 0
     })
   }
 
   render() {
-    const { history } = this.state;
-    const current = history[this.state.stepNumber];
-    const winner = calculateWinner(current.squares);
+    const { history, rounds } = this.state;
+    const currentMove = history[rounds];
+    const winner = calculateWinner(currentMove.boardState);
 
     const moves = history.map((step, move) => {
       const desc = move ?
@@ -83,7 +105,7 @@ class Game extends Component {
       <div className="game">
         <div className="game-board">
           <Board
-            squares={current.squares}
+            squares={currentMove.boardState}
             onClick={(i) => this.handleClick(i)}
           />
         </div>
